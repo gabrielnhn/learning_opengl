@@ -2,11 +2,13 @@
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <vector>
+#include <glm/glm.hpp> // glm::vec3
+
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
-    // glViewport(0, 0, width, height);
-    std::cout << "BRUH MOMENUTM" << std::endl;
+    glViewport(0, 0, width, height);
+    // std::cout << "BRUH MOMENUTM" << std::endl;
 }  
 
 void processInput(GLFWwindow *window)
@@ -22,7 +24,7 @@ int main()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   
-    GLFWwindow* window = glfwCreateWindow(800, 600, "LearnOpenGL", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(800, 800, "LearnOpenGL", NULL, NULL);
     if (window == NULL)
     {
         std::cout << "Failed to create GLFW window" << std::endl;
@@ -37,26 +39,22 @@ int main()
         return -1;
     }   
 
-    // glViewport(0, 0, 800, 600);
+    glViewport(0, 0, 800, 800);
     // glViewport(10, 10, 400, 300);
-    // glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);  
+    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);  
 
     // float vertices[] = {
-    //     -0.5f, -0.5f, 0.0f,
-    //     0.5f, -0.5f, 0.0f,
-    //     0.0f,  0.5f, 0.0f,
+    // std::vector<float> vertices = {
 
-    //     -0.2f, -1.0f, 0.0f,
-    //     0.2f, -0.2f, 0.0f,
-    //     1.0f,  0.2f, 0.0f
-    // };  
-
-    // float vertices[] = {
-    std::vector<float> vertices = {
-        -0.5f, 0.5f, 0.0f,
-        -0.5f, -0.5f, 0.0f,
-        0.5f,  0.5f, 0.0f,
-        0.5f, -0.5f, 0.0f,
+    std::vector<glm::vec3> vertices = {
+        // glm::vec3(-0.5f, 0.5f, 0.0f),
+        // glm::vec3(-0.5f, -0.5f, 0.0f),
+        // glm::vec3(0.5f,  0.5f, 0.0f),
+        // glm::vec3(0.5f, -0.5f, 0.0f),
+        {0.1+ -0.3f, 0.3f, 0.0f},
+        {0.1+ 0.3f,  0.3f, 0.0f},
+        {0.1+ -0.3f, -0.3f, 0.0f},
+        {0.1+ 0.3f, -0.3f, 0.0f},
     };  
 
 
@@ -70,7 +68,8 @@ int main()
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);  
     // glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size()*sizeof(float), &vertices.front(), GL_DYNAMIC_DRAW);
+    // glBufferData(GL_ARRAY_BUFFER, vertices.size()*sizeof(float), &vertices.front(), GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size()*sizeof(glm::vec3), &vertices.front(), GL_DYNAMIC_DRAW);
 
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
@@ -126,22 +125,61 @@ int main()
 
 
     // int i = 0;
+    bool goingdown = true;
+    bool goingright = true;
     int j = 0;
     while(!glfwWindowShouldClose(window))
     {
         j++;
-        if (j % 144 == 0)
-        {   
+        // if (j % 5 == 0)
+        if (true)
+        {
+
+            if (vertices[2].y < -1)
+            {
+                goingdown = false;
+                glClearColor(0.8f, 0.2f, 0.2f, 1.0f);
+            }
+                
+            if (vertices[0].y >= 1)
+            {
+                goingdown = true;
+                glClearColor(0.2f, 0.5f, 0.2f, 1.0f);
+            }
+
+            if (vertices[1].x > 1)
+            {
+                goingright = false;
+                glClearColor(0.3f, 0.5f, 0.8f, 1.0f);
+
+            }
+
+            if (vertices[0].x < -1)
+            {
+                goingright = true;
+                glClearColor(0.9f, 0.3f, 0.0f, 1.0f);
+            }
+
             for(long unsigned int k=0; k < vertices.size(); k++)
             {
-                if (vertices[k] >= -1)
-                vertices[k] = vertices[k]-0.1;
+                if (goingdown)
+                    vertices[k].y = vertices[k].y-0.005;
+                else
+                    vertices[k].y = vertices[k].y+0.005;
+                
+                if (goingright)
+                    vertices[k].x = vertices[k].x+0.005;
+                else
+                    vertices[k].x = vertices[k].x-0.005;
+
+                // std::cout << k << ": " << vertices[k].y << std::endl;
+                
             }
             glBindBuffer(GL_ARRAY_BUFFER, VBO);
-            glBufferData(GL_ARRAY_BUFFER, vertices.size()*sizeof(float), &vertices[0], GL_DYNAMIC_DRAW);
+            // glBufferData(GL_ARRAY_BUFFER, vertices.size()*sizeof(float), &vertices[0], GL_DYNAMIC_DRAW);
+            glBufferData(GL_ARRAY_BUFFER, vertices.size()*sizeof(glm::vec3), &vertices.front(), GL_DYNAMIC_DRAW);
+
         }
-
-
 
         processInput(window);
 
@@ -152,7 +190,7 @@ int main()
         //     glClearColor(0.1f, 0.6f, 0.1f, 1.0f);
 
         // if (i % 3 == 2)
-            glClearColor(0.2f, 0.3f, 0.9f, 1.0f);
+        // glClearColor(0.2f, 0.3f, 0.9f, 1.0f); 
 
         glClear(GL_COLOR_BUFFER_BIT);
 
