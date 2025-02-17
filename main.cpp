@@ -1,7 +1,7 @@
 #include <glad/glad.h> 
 #include <GLFW/glfw3.h>
 #include <iostream>
-
+#include <vector>
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
@@ -41,15 +41,24 @@ int main()
     // glViewport(10, 10, 400, 300);
     // glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);  
 
-    float vertices[] = {
-        -0.5f, -0.5f, 0.0f,
-        0.5f, -0.5f, 0.0f,
-        0.0f,  0.5f, 0.0f,
+    // float vertices[] = {
+    //     -0.5f, -0.5f, 0.0f,
+    //     0.5f, -0.5f, 0.0f,
+    //     0.0f,  0.5f, 0.0f,
 
-        -0.2f, -1.0f, 0.0f,
-        0.2f, -0.2f, 0.0f,
-        1.0f,  0.2f, 0.0f
+    //     -0.2f, -1.0f, 0.0f,
+    //     0.2f, -0.2f, 0.0f,
+    //     1.0f,  0.2f, 0.0f
+    // };  
+
+    // float vertices[] = {
+    std::vector<float> vertices = {
+        -0.5f, 0.5f, 0.0f,
+        -0.5f, -0.5f, 0.0f,
+        0.5f,  0.5f, 0.0f,
+        0.5f, -0.5f, 0.0f,
     };  
+
 
     unsigned int VBO;
     glGenBuffers(1, &VBO);
@@ -60,11 +69,24 @@ int main()
 
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);  
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    // glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    // glBufferData(GL_ARRAY_BUFFER, sizeof(vertices.size()*sizeof(float)), &vertices.front(), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size()*sizeof(float), &vertices.front(), GL_STATIC_DRAW);
 
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);  
+
+    uint EBO;
+    glGenBuffers(1, &EBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+
+    int indices[] = {
+        0,1,2,
+        1,2,3,
+    };
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW); 
+
 
     // glBindBuffer(GL_ARRAY_BUFFER, 0); // Unbind VBO
     // glBindVertexArray(0); // Unbind VAO
@@ -108,26 +130,33 @@ int main()
     int j = 0;
     while(!glfwWindowShouldClose(window))
     {
+
+        // for(int k=0; k < vertices.Length; )
+
+
+
         j++;
         if (j % 10 == 0)
             i++;
         processInput(window);
 
-        if (i % 3 == 0)
-            glClearColor(0.8f, 0.2f, 0.2f, 1.0f);
+        // if (i % 3 == 0)
+        //     glClearColor(0.8f, 0.2f, 0.2f, 1.0f);
 
-        if (i % 3 == 1)
-            glClearColor(0.1f, 0.6f, 0.1f, 1.0f);
+        // if (i % 3 == 1)
+        //     glClearColor(0.1f, 0.6f, 0.1f, 1.0f);
 
-        if (i % 3 == 2)
+        // if (i % 3 == 2)
             glClearColor(0.2f, 0.3f, 0.9f, 1.0f);
 
         glClear(GL_COLOR_BUFFER_BIT);
 
         glUseProgram(shaderProgram);
         glBindVertexArray(VAO);
+        glBindVertexArray(EBO);
         // glDrawArrays(GL_TRIANGLES, 0, 3);
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        // glDrawArrays(GL_TRIANGLES, 0, 6);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
 
 
