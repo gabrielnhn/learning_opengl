@@ -125,8 +125,9 @@ int main()
 
 
     // int i = 0;
-    bool goingdown = true;
-    bool goingright = true;
+    float vx = 0.012;
+    float vy = 0.013;
+    // bool goingright = true;
     int j = 0;
     while(!glfwWindowShouldClose(window))
     {
@@ -137,40 +138,44 @@ int main()
 
             if (vertices[2].y < -1)
             {
-                goingdown = false;
+                vy = -vy;
                 glClearColor(0.8f, 0.2f, 0.2f, 1.0f);
             }
                 
             if (vertices[0].y >= 1)
             {
-                goingdown = true;
+                vy = - vy;
                 glClearColor(0.2f, 0.5f, 0.2f, 1.0f);
             }
 
             if (vertices[1].x > 1)
             {
-                goingright = false;
+                // goingright = false;
+                vx = -vx;
                 glClearColor(0.3f, 0.5f, 0.8f, 1.0f);
 
             }
 
             if (vertices[0].x < -1)
             {
-                goingright = true;
+                // goingright = true;
+                vx = -vx;
                 glClearColor(0.9f, 0.3f, 0.0f, 1.0f);
             }
 
             for(long unsigned int k=0; k < vertices.size(); k++)
             {
-                if (goingdown)
-                    vertices[k].y = vertices[k].y-0.005;
-                else
-                    vertices[k].y = vertices[k].y+0.005;
+                vertices[k].x += vx;
+                vertices[k].y += vy;
+                // if (goingdown)
+                //     vertices[k].y = vertices[k].y-0.009;
+                // else
+                //     vertices[k].y = vertices[k].y+0.009;
                 
-                if (goingright)
-                    vertices[k].x = vertices[k].x+0.005;
-                else
-                    vertices[k].x = vertices[k].x-0.005;
+                // if (goingright)
+                //     vertices[k].x = vertices[k].x+0.005;
+                // else
+                //     vertices[k].x = vertices[k].x-0.005;
 
                 // std::cout << k << ": " << vertices[k].y << std::endl;
                 
