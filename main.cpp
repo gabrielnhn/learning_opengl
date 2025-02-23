@@ -2,7 +2,10 @@
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <vector>
-#include <glm/glm.hpp> // glm::vec3
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp> 
+
 
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
@@ -46,16 +49,39 @@ int main()
     // float vertices[] = {
     // std::vector<float> vertices = {
 
-    std::vector<glm::vec3> vertices = {
-        // glm::vec3(-0.5f, 0.5f, 0.0f),
-        // glm::vec3(-0.5f, -0.5f, 0.0f),
-        // glm::vec3(0.5f,  0.5f, 0.0f),
-        // glm::vec3(0.5f, -0.5f, 0.0f),
-        {0.1+ -0.3f, 0.3f, 0.0f},
-        {0.1+ 0.3f,  0.3f, 0.0f},
-        {0.1+ -0.3f, -0.3f, 0.0f},
-        {0.1+ 0.3f, -0.3f, 0.0f},
+    std::vector<glm::vec4> vertices = {
+        {0.1+ -0.3f, 0.3f, -1.0f, 1.0},
+        {0.1+ 0.3f,  0.3f, -1.0f, 1.0},
+        {0.1+ -0.3f, -0.3f, -1.0f, 1.0},
+        {0.1+ 0.3f, -0.3f, -1.0f, 1.0},
+        {0.1+ -0.3f, 0.3f, 1.0f, 1.0},
+        {0.1+ 0.3f,  0.3f, 1.0f, 1.0},
+        {0.1+ -0.3f, -0.3f, 1.0f, 1.0},
+        {0.1+ 0.3f, -0.3f, 1.0f, 1.0},
     };  
+
+
+    //fuck it perspective
+    // glm::mat4 projection = glm::perspective(30.0f, 1.0f, 0.3f, 2.0f);
+
+
+    glm::mat4 projection = glm::perspective(45.0f, 1.0f, 0.1f, 60.0f);
+    glm::mat4 view = glm::lookAt(glm::vec3(3, 2, 3), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+
+
+    // glm::mat4 model = glm::mat4(1.0f);
+    glm::mat4 model = glm::rotate(glm::mat4(1.0f), glm::radians(30.0f), glm::vec3(1.0f, 1.0f, 0.0f));
+
+    glm::mat4 mvp = projection * view * model;
+    
+
+    std::vector<glm::vec3> gl_vertices;
+
+    // for(int i = 0; i < vertices.size(); i++)
+    // {
+    //     // gl_vertices.push_back (glm::vec3(projection * vertices[i]) ); 
+    //     gl_vertices.push_back (glm::vec3(mvp * vertices[i]) ); 
+    // }
 
 
     unsigned int VBO;
@@ -69,33 +95,43 @@ int main()
     glBindBuffer(GL_ARRAY_BUFFER, VBO);  
     // glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
     // glBufferData(GL_ARRAY_BUFFER, vertices.size()*sizeof(float), &vertices.front(), GL_DYNAMIC_DRAW);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size()*sizeof(glm::vec3), &vertices.front(), GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size()*sizeof(glm::vec4), &vertices.front(), GL_DYNAMIC_DRAW);
 
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(glm::vec4), (void*)0);
     glEnableVertexAttribArray(0);  
 
     uint EBO;
     glGenBuffers(1, &EBO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 
-    int indices[] = {
+    std::vector<int> indices = {
         0,1,2,
         1,2,3,
+        0,4,6,
+        0,2,6,
+        2,6,7,
+        2,3,7,
+        1,3,7,
+        1,5,7,
+        0,1,4,
+        0,1,5,
+        4,5,6,
+        5,6,7,
     };
     // glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW); 
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_DYNAMIC_DRAW); 
-
-    // glBindBuffer(GL_ARRAY_BUFFER, 0); // Unbind VBO
-    // glBindVertexArray(0); // Unbind VAO
-
-
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size()*sizeof(int), &indices.front(), GL_DYNAMIC_DRAW); 
 
     const char *vertexShaderSourceGLSLCode = "#version 330 core\n"
-        "layout (location = 0) in vec3 aPos;\n"
+        // "layout (location = 0) in vec3 aPos;\n"
+        "layout (location = 0) in vec4 aPos;\n"
+        "uniform mat4 mvp;\n"
         "void main()\n"
         "{\n"
-        "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+
+        // "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+        // "   gl_Position = mvp * vec4    (aPos, 1.0);\n"
+        "   gl_Position = mvp * aPos;\n"
         "}\0";
     
     const char *fragShaderSourceGLSLCode = "#version 330 core\n"
@@ -120,9 +156,16 @@ int main()
     shaderProgram = glCreateProgram();
     glAttachShader(shaderProgram, vertexShader);
     glAttachShader(shaderProgram, fragShader);
+
     glLinkProgram(shaderProgram);
     glUseProgram(shaderProgram);
 
+
+    int mvpLocation = glGetUniformLocation(shaderProgram, "mvp");
+    glUniformMatrix4fv(mvpLocation, 1, GL_FALSE, glm::value_ptr(mvp));
+
+
+    glEnable(GL_DEPTH_TEST);
 
     // int i = 0;
     float vx = 0.012;
@@ -131,24 +174,26 @@ int main()
     int j = 0;
     while(!glfwWindowShouldClose(window))
     {
+
         j++;
         // if (j % 5 == 0)
         if (true)
         {
+            const float BOUND = 5.0f;
 
-            if (vertices[2].y < -1)
+            if (vertices[2].y < -BOUND)
             {
                 vy = -vy;
                 glClearColor(0.8f, 0.2f, 0.2f, 1.0f);
             }
                 
-            if (vertices[0].y >= 1)
+            if (vertices[0].y >= BOUND)
             {
                 vy = - vy;
                 glClearColor(0.2f, 0.5f, 0.2f, 1.0f);
             }
 
-            if (vertices[1].x > 1)
+            if (vertices[1].x > BOUND)
             {
                 // goingright = false;
                 vx = -vx;
@@ -156,7 +201,7 @@ int main()
 
             }
 
-            if (vertices[0].x < -1)
+            if (vertices[0].x < -BOUND)
             {
                 // goingright = true;
                 vx = -vx;
@@ -167,45 +212,28 @@ int main()
             {
                 vertices[k].x += vx;
                 vertices[k].y += vy;
-                // if (goingdown)
-                //     vertices[k].y = vertices[k].y-0.009;
-                // else
-                //     vertices[k].y = vertices[k].y+0.009;
-                
-                // if (goingright)
-                //     vertices[k].x = vertices[k].x+0.005;
-                // else
-                //     vertices[k].x = vertices[k].x-0.005;
-
-                // std::cout << k << ": " << vertices[k].y << std::endl;
+             
+                std::cout << k << ": " << vertices[k].y << std::endl;
                 
             }
+
             glBindBuffer(GL_ARRAY_BUFFER, VBO);
+            // glBufferData(GL_ARRAY_BUFFER, vertices.size()*sizeof(glm::vec4), &gl_vertices.front(), GL_DYNAMIC_DRAW);
             // glBufferData(GL_ARRAY_BUFFER, vertices.size()*sizeof(float), &vertices[0], GL_DYNAMIC_DRAW);
-            glBufferData(GL_ARRAY_BUFFER, vertices.size()*sizeof(glm::vec3), &vertices.front(), GL_DYNAMIC_DRAW);
+            glBufferData(GL_ARRAY_BUFFER, vertices.size()*sizeof(glm::vec4), &vertices.front(), GL_DYNAMIC_DRAW);
 
         }
 
         processInput(window);
 
-        // if (i % 3 == 0)
-        //     glClearColor(0.8f, 0.2f, 0.2f, 1.0f);
-
-        // if (i % 3 == 1)
-        //     glClearColor(0.1f, 0.6f, 0.1f, 1.0f);
-
-        // if (i % 3 == 2)
-        // glClearColor(0.2f, 0.3f, 0.9f, 1.0f); 
-
-        glClear(GL_COLOR_BUFFER_BIT);
+        // glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         glUseProgram(shaderProgram);
-        glBindVertexArray(VAO);
-        glBindVertexArray(EBO);
-        // glDrawArrays(GL_TRIANGLES, 0, 3);
-        // glDrawArrays(GL_TRIANGLES, 0, 6);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-        glBindVertexArray(0);
+        // glBindVertexArray(VAO);
+        // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+        glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
+        // glBindVertexArray(0);
 
 
         glfwSwapBuffers(window);
