@@ -22,11 +22,22 @@ void processInput(GLFWwindow *window)
     if(glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
     {
         camera.x -= 0.1;
-        std::cout << "REPEAT A" << std::endl;
     }
 
     if(glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         camera.x += 0.1;
+
+    if(glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+        camera.z -= 0.1;
+
+    if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+        camera.z += 0.1;
+
+    if(glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS)
+        camera.y -= 0.1;
+
+    if(glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS)
+        camera.y += 0.1;
 }
 
 int main()
@@ -76,8 +87,7 @@ int main()
     glm::mat4 view = glm::lookAt(camera, glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
 
 
-    // glm::mat4 model = glm::mat4(1.0f);
-    glm::mat4 model = glm::rotate(glm::mat4(1.0f), glm::radians(30.0f), glm::vec3(1.0f, 1.0f, 0.0f));
+    glm::mat4 model = glm::mat4(1.0f);
 
     glm::mat4 mvp = projection * view * model;
     
@@ -134,7 +144,7 @@ int main()
         "out vec4 FragColor;\n"
         "void main()\n"
         "{\n"
-            "FragColor = vec4(0.2f, 0.2f, 0.2f, 1.0f);\n"
+            "FragColor = vec4(0.2f, 0.9f, 0.2f, 1.0f);\n"
         "}\0";
     
 
@@ -170,6 +180,7 @@ int main()
     float vy = 0;
     // bool goingright = true;
     int j = 0;
+    glClearColor(0.2f, 0.2f, 0.2f, 0.5f);
     while(!glfwWindowShouldClose(window))
     {
 
