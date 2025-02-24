@@ -45,83 +45,76 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
     glViewport(0, 0, width, height);
 }  
-
-void processInput(GLFWwindow *window)
-{
-    if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+void processInput(GLFWwindow* window) {
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
-    
-    glm::vec3 forward = glm::normalize(aim - camera);
+
+    glm::vec3 forward = glm::normalize(aim - camera); // Forward direction
     glm::vec3 right = glm::normalize(glm::cross(forward, glm::vec3(0, 1, 0))); // Right vector
 
-    if(glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-    {
-        camera -= speed * forward;
+    // Debugging output
+    std::cout << "Forward Vector: (" << forward.x << ", " << forward.y << ", " << forward.z << ")" << std::endl;
+    std::cout << "Right Vector: (" << right.x << ", " << right.y << ", " << right.z << ")" << std::endl;
+
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+        camera -= speed * forward; // Move backward
         aim -= speed * forward;
     }
-    if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-    {
-        camera += speed * forward;
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+        camera += speed * forward; // Move forward
         aim += speed * forward;
     }
-    if(glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-    {
-        camera += speed * right;
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+        camera += speed * right; // Move right (positive X)
         aim += speed * right;
     }
-    if(glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-    {
-        camera -= speed * right;
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+        camera -= speed * right; // Move left (negative X)
         aim -= speed * right;
     }
 
     glfwGetCursorPos(window, &mousex, &mousey);
-   
+
     if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE)
         last_mouse_event = 0;
-   
-    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
-    {
-        if (last_mouse_event == 0)
-        {
+
+    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+        if (last_mouse_event == 0) {
             mousex_last = mousex;
             mousey_last = mousey;
-            last_mouse_event = 1;           
-        }
-        else
-        {   
-            float xdiff = (mousex - mousex_last)/width;
-            float ydiff = (mousey - mousey_last)/height;
-            
+            last_mouse_event = 1;
+        } else {
+            float xdiff = (mousex - mousex_last) / width;
+            float ydiff = (mousey - mousey_last) / height;
+
             float sensitivity = 50.0f; // Tune sensitivity
             yaw += xdiff * sensitivity;
             pitch -= ydiff * sensitivity; // Invert Y for natural movement
 
             pitch = glm::clamp(pitch, -89.0f, 89.0f); // Prevent flipping
-            
+
             glm::vec3 direction;
             direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
             direction.y = sin(glm::radians(pitch));
             direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
 
             aim = camera + direction;
-            
+
             mousex_last = mousex;
             mousey_last = mousey;
         }
-        
     }
-    std::cout << "AIM: " << aim.x << ", " << aim.y << ", " << aim.z << ", (mousex =" << mousex << std::endl;
-    std::cout << "CAM: " << camera.x << ", " << camera.y << ", " << camera.z << ", (mousex =" << mousex << std::endl;
 
-    //clamp
-    // camera.x = std::clamp(camera.x, -0.5f, 0.5f);
+    // Print camera and aim positions for debugging
+    std::cout << "Camera Position: (" << camera.x << ", " << camera.y << ", " << camera.z << ")" << std::endl;
+    std::cout << "Aim Position: (" << aim.x << ", " << aim.y << ", " << aim.z << ")" << std::endl;
+
+    // Clamp camera and aim positions
     camera.x = std::clamp(camera.x, -0.5f, 1.0f);
     aim.x = std::clamp(aim.x, -0.5f, 1.0f);
 
     camera.y = std::clamp(camera.y, -0.0f, 0.5f);
     aim.y = std::clamp(aim.y, -0.0f, 0.5f);
-    std::cout << "Right Vector: (" << right.x << ", " << right.y << ", " << right.z << ")" << std::endl;
 }
 
 int main()
