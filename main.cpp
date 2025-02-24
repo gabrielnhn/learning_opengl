@@ -209,6 +209,15 @@ int main()
     //     std::cout << vertex << std::endl;
     // }
 
+     // Normalize vertex data to fit within [-1, 1] range
+     for (size_t i = 0; i < vertices.size(); i += 4) {
+        vertices[i] /= 500.0f;     // Scale x
+        vertices[i + 1] /= 500.0f; // Scale y
+        vertices[i + 2] /= 500.0f; // Scale z
+        // vertices[i + 3] = 1.0f;    // Ensure w = 1
+    }
+
+
     for (size_t i = 0; i < 10; ++i) {
         std::cout << "Vertex " << i << ": "
                   << vertices[i * 4] << ", "
@@ -229,20 +238,23 @@ int main()
         "#version 330 core\n"
         "layout (location = 0) in vec4 vertexPosition; // Expecting vec4 for each vertex\n"
         "uniform mat4 mvp;  // Model-View-Projection matrix\n"
-        "out vec4 vertexColor;  // Output color to fragment shader\n"
+        "out float vertexColor;  // Output color to fragment shader\n"
         "void main()\n"
         "{\n"
-        "    vertexColor = vec4(0.5, vertexPosition.w, 0.5, 1.0);\n"  // Pass the position directly to the fragment shader for color"
+        "    vertexColor = vertexPosition.w;\n"  // Pass the position directly to the fragment shader for color"
         "    gl_Position = mvp * vec4(vertexPosition.xyz, 1.0);\n"  // Apply MVP transformation"
         "}\0";
 
     
     const char *fragShaderSourceGLSLCode = "#version 330 core\n"
         "out vec4 FragColor;\n"
-        "in vec4 vertexColor;\n"
+        "in float vertexColor;\n"
         "void main()\n"
         "{\n"
-            "FragColor = vertexColor;\n"
+            "if(vertexColor > 0.5)\n"
+            "FragColor = vec4(1.0, 0.0, 0.0, 1.0);\n"
+            "else\n"
+            "FragColor = vec4(0.0, 1.0, 0.0, 1.0);\n"
         "}\0";
     
 
@@ -298,7 +310,7 @@ int main()
         // glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
         // glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
         // glDrawArrays(GL_POINTS, 0, vertices.size());  // Each vertex is 1 float
-        glPointSize(10.0f); // Set point size to 10 pixels
+        glPointSize(1.0f); // Set point size to 10 pixels
         glDrawArrays(GL_POINTS, 0, vertices.size()/4);  // Each vertex is 1 float
 
         glfwSwapBuffers(window);
