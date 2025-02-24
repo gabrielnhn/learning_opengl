@@ -136,7 +136,12 @@ void processInput(GLFWwindow *window)
 int main()
 {
 
-    const std::string path = "data/data.npy";
+    // const std::string path = "data/A0P10C0-2021_11_04_12_30_08.npy";
+    // const std::string path = "data/A0P10C1-2021_11_04_12_30_17.npy";
+    // const std::string path = "data/A0P11C0-2021_11_04_13_09_56.npy";
+    // const std::string path = "data/A1P10C0-2021_11_04_12_30_45.npy";
+    const std::string path = "data/A2P10C0-2021_11_04_12_31_28.npy";
+    // const std::string path = "data/A10P10C0-2021_11_04_12_34_46.npy";
     std::cout << "READING: " << path << std::endl;
     npy::npy_data d = npy::read_npy<float>(path);
     d.fortran_order = true;
