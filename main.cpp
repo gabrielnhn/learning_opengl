@@ -13,11 +13,11 @@
 
 # define M_PI 3.14159265358979323846
 
-// float farDistance=50.0f;
-float farDistance=3.0f;
-// auto camera = glm::vec3(0.5, 0.5, 3);
-// auto aim = glm::vec3(0.5, 0.5, 0);
-auto camera = glm::vec3(-0.5, -0.5, 3);
+float fov = glm::radians(45.0f);
+float farDistance=1.2f;
+float nearDistance=0.1f;
+
+auto camera = glm::vec3(-0.5, -0.5, 1);
 auto aim = glm::vec3(-0.5, -0.5, 0);
 
 double mousex, mousey;
@@ -38,10 +38,19 @@ static float yaw = -90.0f;
 static float pitch = 0.0f;
 glm::mat4 mvp;
 
+float aspect_ratio = width/height;
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height)
+
+void framebuffer_size_callback(GLFWwindow* window, int w, int h)
 {
+    width = w;
+    height = h;
     glViewport(0, 0, width, height);
+    std::cout << "CHANGED SIZE";
+    std::cout << aspect_ratio << std::endl;
+    aspect_ratio = width/height;
+    std::cout << aspect_ratio << std::endl;
+
 }  
 
 void processInput(GLFWwindow *window)
@@ -202,8 +211,8 @@ int main()
     glViewport(0, 0, width, height);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);  
 
-
-    glm::mat4 projection = glm::perspective(glm::radians(30.0f), 1.0f, 0.1f, farDistance);
+    aspect_ratio = width/height;
+    glm::mat4 projection = glm::perspective(fov, aspect_ratio, nearDistance, farDistance);
 
     glm::mat4 view = glm::lookAt(camera, aim, glm::vec3(0, 1, 0));
     // view = flipZ* view;
@@ -308,8 +317,9 @@ int main()
         }
 
         // remake projection
+        glm::mat4 projection = glm::perspective(fov, aspect_ratio, nearDistance, farDistance);
         view = glm::lookAt(camera, aim, glm::vec3(0, 1, 0));
-        glm::mat4 mvp = projection * view * model;
+        mvp = projection * view * model;
         int mvpLocation = glGetUniformLocation(shaderProgram, "mvp");
         glUniformMatrix4fv(mvpLocation, 1, GL_FALSE, glm::value_ptr(mvp));
 
