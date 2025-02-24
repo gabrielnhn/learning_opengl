@@ -6,15 +6,26 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp> 
 
+# define M_PI 3.14159265358979323846
+
 auto camera = glm::vec3(0, 0, 3);
+// auto camera = glm::vec4(0, 0, 3, 1);
 auto aim = glm::vec3(0, 0, 0);
+// auto aim = glm::vec4(0, 0, 1, 1);
 
 double mousex, mousey;
-double mousex_init, mousey_init;
+double mousex_last, mousey_last;
 int last_mouse_event = GLFW_RELEASE;
 
 double height = 800;
 double width = 800;
+
+float farDistance=50.0f;
+static float yaw = -90.0f; // Start facing forward
+static float pitch = 0.0f;
+glm::mat4 mvp;
+
+glm::mat3x3 right_transform = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(0, 1, 0));
 
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
@@ -27,47 +38,74 @@ void processInput(GLFWwindow *window)
     if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 
-    // if(glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-    //     camera.x -= 0.1;
-    // if(glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-    //     camera.x += 0.1;
+    
+    glm::vec3 forward = glm::normalize(aim - camera); // Forward direction
+    glm::vec3 right = right_transform * forward; // Forward direction
+
+
+
+
     if(glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        camera.z -= 0.1;
+    {
+        camera -= 0.01f * forward;
+        aim -= 0.01f * forward;
+    }
     if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        camera.z += 0.1;
-    // if(glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS)
-    //     camera.y -= 0.1;
-    // if(glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS)
-    //     camera.y += 0.1;
+    {
+        camera += 0.01f * forward;
+        aim += 0.01f * forward;
+    }
+    if(glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+    {
+        camera += 0.01f * right;
+        aim += 0.01f * right;
+    }
+    if(glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+    {
+        camera -= 0.01f * right;
+        aim -= 0.01f * right;
+    }
 
     glfwGetCursorPos(window, &mousex, &mousey);
-    std::cout << "X. " << mousex << ", Y: " << mousey << std::endl;
-
-
+   
+    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE)
+        last_mouse_event = 0;
+   
     if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
     {
-        if (last_mouse_event == GLFW_RELEASE)
+        if (last_mouse_event == 0)
         {
-            mousex_init = mousex;
-            mousey_init = mousey;
+            mousex_last = mousex;
+            mousey_last = mousey;
+            last_mouse_event = 1;           
         }
+        else
+        {   
+            float xdiff = (mousex - mousex_last)/width;
+            float ydiff = (mousey - mousey_last)/height;
+            
+            float sensitivity = 50.0f; // Tune sensitivity
+            yaw += xdiff * sensitivity;
+            pitch -= ydiff * sensitivity; // Invert Y for natural movement
 
-        last_mouse_event = GLFW_PRESS;
+            pitch = glm::clamp(pitch, -89.0f, 89.0f); // Prevent flipping
+            
+            glm::vec3 direction;
+            direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+            direction.y = sin(glm::radians(pitch));
+            direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
 
-    }
-    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE)
-    {
-        if (last_mouse_event == GLFW_PRESS)
-        {
-            aim.x -= (mousex - mousex_init)/width * 5;
-            aim.y -= (mousey - mousey_init)/height * 5;
+            aim = camera + direction;
+            
+            
+            // std::cout << "xdiff" << xdiff << std::endl;
+
+            mousex_last = mousex;
+            mousey_last = mousey;
         }
-        last_mouse_event = GLFW_RELEASE;
-
+        
     }
-
-    aim.z = camera.z - 3;
-    
+    std::cout << "AIM: " << aim.x << ", " << aim.y << ", " << aim.z << ", (mousex =" << mousex << std::endl;
 }
 
 int main()
@@ -109,13 +147,14 @@ int main()
 
     //fuck it perspective
 
-    glm::mat4 projection = glm::perspective(30.0f, 1.0f, 0.1f, 60.0f);
-    glm::mat4 view = glm::lookAt(camera, glm::vec3(0, 0, 0), glm::vec3(0, 0, 1));
+    glm::mat4 projection = glm::perspective(glm::radians(30.0f), 1.0f, 0.1f, farDistance);
+
+    glm::mat4 view = glm::lookAt(camera, aim, glm::vec3(0, 1, 0));
 
 
     glm::mat4 model = glm::mat4(1.0f);
 
-    glm::mat4 mvp = projection * view * model;
+    mvp = projection * view * model;
     
 
     std::vector<glm::vec3> gl_vertices;
@@ -256,7 +295,6 @@ int main()
         }
 
         // remake projection
-        // view = glm::lookAt(camera, glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
         view = glm::lookAt(camera, aim, glm::vec3(0, 1, 0));
         glm::mat4 mvp = projection * view * model;
         int mvpLocation = glGetUniformLocation(shaderProgram, "mvp");
