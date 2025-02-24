@@ -8,10 +8,9 @@
 
 # define M_PI 3.14159265358979323846
 
+float farDistance=50.0f;
 auto camera = glm::vec3(0, 0, 3);
-// auto camera = glm::vec4(0, 0, 3, 1);
 auto aim = glm::vec3(0, 0, 0);
-// auto aim = glm::vec4(0, 0, 1, 1);
 
 double mousex, mousey;
 double mousex_last, mousey_last;
@@ -20,7 +19,8 @@ int last_mouse_event = GLFW_RELEASE;
 double height = 800;
 double width = 800;
 
-float farDistance=50.0f;
+float speed = 0.02f;
+
 static float yaw = -90.0f; // Start facing forward
 static float pitch = 0.0f;
 glm::mat4 mvp;
@@ -47,23 +47,23 @@ void processInput(GLFWwindow *window)
 
     if(glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
     {
-        camera -= 0.01f * forward;
-        aim -= 0.01f * forward;
+        camera -= speed * forward;
+        aim -= speed * forward;
     }
     if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
     {
-        camera += 0.01f * forward;
-        aim += 0.01f * forward;
+        camera += speed * forward;
+        aim += speed * forward;
     }
     if(glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
     {
-        camera += 0.01f * right;
-        aim += 0.01f * right;
+        camera += speed * right;
+        aim += speed * right;
     }
     if(glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
     {
-        camera -= 0.01f * right;
-        aim -= 0.01f * right;
+        camera -= speed * right;
+        aim -= speed * right;
     }
 
     glfwGetCursorPos(window, &mousex, &mousey);
