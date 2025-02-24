@@ -13,9 +13,12 @@
 
 # define M_PI 3.14159265358979323846
 
+// float farDistance=50.0f;
 float farDistance=500.0f;
-auto camera = glm::vec3(0, 0, 3);
-auto aim = glm::vec3(0, 0, 0);
+auto camera = glm::vec3(0.5, 0.5, -3);
+// auto camera = glm::vec3(0.0, 0.5, -3);
+auto aim = glm::vec3(0.5, 0.5, 0);
+// auto aim = glm::vec3(0, 0.5, 0);
 
 double mousex, mousey;
 double mousex_last, mousey_last;
@@ -24,9 +27,14 @@ int last_mouse_event = GLFW_RELEASE;
 double height = 800;
 double width = 800;
 
+// 346x260
+float ds_height = 346;
+float ds_width = 260;
+
 float speed = 0.02f;
 
-static float yaw = -90.0f; // Start facing forward
+// static float yaw = -90.0f; // Start facing forward
+static float yaw = 90.0f; // Start facing backward?
 static float pitch = 0.0f;
 glm::mat4 mvp;
 
@@ -43,8 +51,8 @@ void processInput(GLFWwindow *window)
     if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
     
-    glm::vec3 forward = glm::normalize(aim - camera); // Forward direction
-    glm::vec3 right = right_transform * forward; // Forward direction
+    glm::vec3 forward = glm::normalize(aim - camera);
+    glm::vec3 right = glm::normalize(glm::cross(forward, glm::vec3(0, 1, 0))); // Right vector
 
     if(glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
     {
@@ -103,7 +111,17 @@ void processInput(GLFWwindow *window)
         }
         
     }
-    // std::cout << "AIM: " << aim.x << ", " << aim.y << ", " << aim.z << ", (mousex =" << mousex << std::endl;
+    std::cout << "AIM: " << aim.x << ", " << aim.y << ", " << aim.z << ", (mousex =" << mousex << std::endl;
+    std::cout << "CAM: " << camera.x << ", " << camera.y << ", " << camera.z << ", (mousex =" << mousex << std::endl;
+
+    //clamp
+    // camera.x = std::clamp(camera.x, -0.5f, 0.5f);
+    camera.x = std::clamp(camera.x, -0.5f, 1.0f);
+    aim.x = std::clamp(aim.x, -0.5f, 1.0f);
+
+    camera.y = std::clamp(camera.y, -0.0f, 0.5f);
+    aim.y = std::clamp(aim.y, -0.0f, 0.5f);
+    std::cout << "Right Vector: (" << right.x << ", " << right.y << ", " << right.z << ")" << std::endl;
 }
 
 int main()
@@ -133,14 +151,26 @@ int main()
     std::cout << std::endl;
     // return 0;
 
-    // std::vector<glm::vec4> vertices; // Create a vector of glm::vec4
     std::vector<float> vertices; // Create a vector of glm::vec4
+
+    // declare start
+    for(int x = 0; x < ds_width; x++)
+    {
+        for(int y = 0; y < ds_height; y++)
+        {
+            vertices.push_back(x);
+            vertices.push_back(y);
+            vertices.push_back(0);
+            vertices.push_back(1);
+        }
+    }
+
+
 
     // Convert the column-major data into row-major
     for (size_t i = 0; i < shape[0]; ++i) {
         for (size_t j = 0; j < shape[1]; ++j) {
             size_t index = j * shape[0] + i;  // Convert column-major index
-            // vertices.push_back(glm::vec4(data[index], 0.0f, 0.0f, 0.0f)); // Convert to vec4
             vertices.push_back(data[index]); // Convert to vec4
         }
     }
@@ -170,28 +200,11 @@ int main()
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);  
 
 
-    // std::vector<glm::vec4> vertices = {
-    //     {0.1+ -0.3f, 0.3f, -1.0f, 1.0},
-    //     {0.1+ 0.3f,  0.3f, -1.0f, 1.0},
-    //     {0.1+ -0.3f, -0.3f, -1.0f, 1.0},
-    //     {0.1+ 0.3f, -0.3f, -1.0f, 1.0},
-    //     {0.1+ -0.3f, 0.3f, -0.7f, 1.0},
-    //     {0.1+ 0.3f,  0.3f, -0.7f, 1.0},
-    //     {0.1+ -0.3f, -0.3f, -0.7f, 1.0},
-    //     {0.1+ 0.3f, -0.3f, -0.7f, 1.0},
-    // };  
-
-    //fuck it perspective
-
+    // glm::mat4 projection = glm::perspective(glm::radians(15.0f), 1.0f, 0.1f, farDistance);
     glm::mat4 projection = glm::perspective(glm::radians(30.0f), 1.0f, 0.1f, farDistance);
-
     glm::mat4 view = glm::lookAt(camera, aim, glm::vec3(0, 1, 0));
-
-
     glm::mat4 model = glm::mat4(1.0f);
-
     mvp = projection * view * model;
-    
 
     unsigned int VBO;
     glGenBuffers(1, &VBO);
@@ -203,17 +216,11 @@ int main()
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);  
 
-    // for (const auto& vertex : vertices) {
-
-    //     // std::cout << vertex.x << ", " << vertex.y << ", " << vertex.z << std::endl;
-    //     std::cout << vertex << std::endl;
-    // }
-
      // Normalize vertex data to fit within [-1, 1] range
      for (size_t i = 0; i < vertices.size(); i += 4) {
-        vertices[i] /= 500.0f;     // Scale x
-        vertices[i + 1] /= 500.0f; // Scale y
-        vertices[i + 2] /= 500.0f; // Scale z
+        vertices[i] /= ds_width;     // Scale x
+        vertices[i + 1] /= ds_height; // Scale y
+        vertices[i + 2] /= 500000.0f; // Scale z
         // vertices[i + 3] = 1.0f;    // Ensure w = 1
     }
 
@@ -243,6 +250,7 @@ int main()
         "{\n"
         "    vertexColor = vertexPosition.w;\n"  // Pass the position directly to the fragment shader for color"
         "    gl_Position = mvp * vec4(vertexPosition.xyz, 1.0);\n"  // Apply MVP transformation"
+        // "    gl_Position = mvp * vec4(vertexPosition.y, vertexPosition.x, vertexPosition.z, 1.0);\n"  // Apply MVP transformation"
         "}\0";
 
     
@@ -252,9 +260,9 @@ int main()
         "void main()\n"
         "{\n"
             "if(vertexColor > 0.5)\n"
-            "FragColor = vec4(1.0, 0.0, 0.0, 1.0);\n"
-            "else\n"
             "FragColor = vec4(0.0, 1.0, 0.0, 1.0);\n"
+            "else\n"
+            "FragColor = vec4(1.0, 0.0, 0.0, 1.0);\n"
         "}\0";
     
 
