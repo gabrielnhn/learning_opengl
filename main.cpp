@@ -13,10 +13,12 @@
 
 # define M_PI 3.14159265358979323846
 
-// float farDistance=500.0f;
-float farDistance=50.0f;
-auto camera = glm::vec3(0.5, 0.5, -3);
-auto aim = glm::vec3(0.5, 0.5, 0);
+// float farDistance=50.0f;
+float farDistance=3.0f;
+// auto camera = glm::vec3(0.5, 0.5, 3);
+// auto aim = glm::vec3(0.5, 0.5, 0);
+auto camera = glm::vec3(-0.5, -0.5, 3);
+auto aim = glm::vec3(-0.5, -0.5, 0);
 
 double mousex, mousey;
 double mousex_last, mousey_last;
@@ -26,19 +28,15 @@ double height = 800;
 double width = 800;
 
 // 346x260
-// float ds_height = 346;
 float ds_width = 346;
-// float ds_width = 260;
 float ds_height = 260;
 
 float speed = 0.02f;
 
-// static float yaw = -90.0f; // Start facing forward
-static float yaw = 90.0f; // Start facing backward?
+// static float yaw = 90.0f; // Start facing backward?
+static float yaw = -90.0f; 
 static float pitch = 0.0f;
 glm::mat4 mvp;
-
-glm::mat3x3 right_transform = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(0, 1, 0));
 
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
@@ -52,28 +50,32 @@ void processInput(GLFWwindow *window)
         glfwSetWindowShouldClose(window, true);
     
     glm::vec3 forward = glm::normalize(aim - camera);
+    // glm::vec3 right = glm::normalize(glm::cross(glm::vec3(0, 1, 0),forward)); // Right vector
     glm::vec3 right = glm::normalize(glm::cross(forward, glm::vec3(0, 1, 0))); // Right vector
+
 
     if(glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
     {
         camera -= speed * forward;
-        aim -= speed * forward;
+        // aim -= speed * forward;
     }
     if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
     {
         camera += speed * forward;
-        aim += speed * forward;
+        // aim += speed * forward;
     }
     if(glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
     {
         camera += speed * right;
-        aim += speed * right;
+        // aim += speed * right;
     }
     if(glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
     {
         camera -= speed * right;
-        aim -= speed * right;
+        // aim -= speed * right;
     }
+    aim = camera + forward;
+
 
     glfwGetCursorPos(window, &mousex, &mousey);
    
@@ -111,17 +113,15 @@ void processInput(GLFWwindow *window)
         }
         
     }
-    std::cout << "AIM: " << aim.x << ", " << aim.y << ", " << aim.z << ", (mousex =" << mousex << std::endl;
-    std::cout << "CAM: " << camera.x << ", " << camera.y << ", " << camera.z << ", (mousex =" << mousex << std::endl;
+    // std::cout << "AIM: " << aim.x << ", " << aim.y << ", " << aim.z << ", (mousex =" << mousex << std::endl;
+    // std::cout << "CAM: " << camera.x << ", " << camera.y << ", " << camera.z << ", (mousex =" << mousex << std::endl;
 
     //clamp
-    // camera.x = std::clamp(camera.x, -0.5f, 0.5f);
-    camera.x = std::clamp(camera.x, -0.5f, 1.0f);
-    aim.x = std::clamp(aim.x, -0.5f, 1.0f);
+    camera.x = std::clamp(camera.x, -1.0f, 2.0f);
+    aim.x = std::clamp(aim.x, -1.0f, 2.0f);
 
-    camera.y = std::clamp(camera.y, -0.0f, 0.5f);
-    aim.y = std::clamp(aim.y, -0.0f, 0.5f);
-    std::cout << "Right Vector: (" << right.x << ", " << right.y << ", " << right.z << ")" << std::endl;
+    camera.y = std::clamp(camera.y, -1.0f, 2.0f);
+    aim.y = std::clamp(aim.y, -1.0f, 2.0f);
 }
 
 int main()
@@ -154,16 +154,19 @@ int main()
     std::vector<float> vertices; // Create a vector of glm::vec4
 
     // declare start
-    for(int x = 0; x < ds_width; x++)
-    {
-        for(int y = 0; y < ds_height; y++)
-        {
-            vertices.push_back(x);
-            vertices.push_back(y);
-            vertices.push_back(0);
-            vertices.push_back(1);
-        }
-    }
+    // for(int x = 0; x < ds_width; x++)
+    // {
+    //     for(int y = 0; y < ds_height; y++)
+    //     {
+    //         vertices.push_back(x);
+    //         vertices.push_back(y);
+    //         vertices.push_back(0);
+    //         if (x == 0)
+    //         vertices.push_back(0);
+    //         else
+    //         vertices.push_back(1);
+    //     }
+    // }
 
 
 
@@ -201,11 +204,9 @@ int main()
 
 
     glm::mat4 projection = glm::perspective(glm::radians(30.0f), 1.0f, 0.1f, farDistance);
-    glm::mat4 flipZ = glm::scale(glm::mat4(1.0f), glm::vec3(1, 1, -1)); // Flip Z-axis
-    projection = flipZ * projection; // Adapt for left-handed system
 
     glm::mat4 view = glm::lookAt(camera, aim, glm::vec3(0, 1, 0));
-    view = flipZ* view;
+    // view = flipZ* view;
 
     glm::mat4 model = glm::mat4(1.0f);
     mvp = projection * view * model;
@@ -222,10 +223,9 @@ int main()
 
      // Normalize vertex data to fit within [-1, 1] range
      for (size_t i = 0; i < vertices.size(); i += 4) {
-        vertices[i] /= ds_width;     // Scale x
-        vertices[i + 1] /= ds_height; // Scale y
-        vertices[i + 2] /= 500000.0f; // Scale z
-        // vertices[i + 3] = 1.0f;    // Ensure w = 1
+        vertices[i] /= -ds_width;     // Scale x
+        vertices[i + 1] /= -ds_height; // Scale y
+        vertices[i + 2] /= -500000.0f; // Scale z
     }
 
 
