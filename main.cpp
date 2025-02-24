@@ -6,12 +6,20 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp> 
 
-auto camera = glm::vec3(3, 2, 3);
+auto camera = glm::vec3(0, 0, 3);
+auto aim = glm::vec3(0, 0, 0);
+
+double mousex, mousey;
+double mousex_init, mousey_init;
+int last_mouse_event = GLFW_RELEASE;
+
+double height = 800;
+double width = 800;
+
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
     glViewport(0, 0, width, height);
-    // std::cout << "BRUH MOMENUTM" << std::endl;
 }  
 
 void processInput(GLFWwindow *window)
@@ -19,25 +27,47 @@ void processInput(GLFWwindow *window)
     if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 
-    if(glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-    {
-        camera.x -= 0.1;
-    }
-
-    if(glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        camera.x += 0.1;
-
+    // if(glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+    //     camera.x -= 0.1;
+    // if(glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+    //     camera.x += 0.1;
     if(glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
         camera.z -= 0.1;
-
     if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
         camera.z += 0.1;
+    // if(glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS)
+    //     camera.y -= 0.1;
+    // if(glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS)
+    //     camera.y += 0.1;
 
-    if(glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS)
-        camera.y -= 0.1;
+    glfwGetCursorPos(window, &mousex, &mousey);
+    std::cout << "X. " << mousex << ", Y: " << mousey << std::endl;
 
-    if(glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS)
-        camera.y += 0.1;
+
+    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
+    {
+        if (last_mouse_event == GLFW_RELEASE)
+        {
+            mousex_init = mousex;
+            mousey_init = mousey;
+        }
+
+        last_mouse_event = GLFW_PRESS;
+
+    }
+    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE)
+    {
+        if (last_mouse_event == GLFW_PRESS)
+        {
+            aim.x -= (mousex - mousex_init)/width * 5;
+            aim.y -= (mousey - mousey_init)/height * 5;
+        }
+        last_mouse_event = GLFW_RELEASE;
+
+    }
+
+    aim.z = camera.z - 3;
+    
 }
 
 int main()
@@ -47,7 +77,7 @@ int main()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   
-    GLFWwindow* window = glfwCreateWindow(800, 800, "LearnOpenGL", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(width, height, "LearnOpenGL", NULL, NULL);
     if (window == NULL)
     {
         std::cout << "Failed to create GLFW window" << std::endl;
@@ -62,29 +92,25 @@ int main()
         return -1;
     }   
 
-    glViewport(0, 0, 800, 800);
-    // glViewport(10, 10, 400, 300);
+    glViewport(0, 0, width, height);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);  
 
-    // float vertices[] = {
-    // std::vector<float> vertices = {
 
     std::vector<glm::vec4> vertices = {
         {0.1+ -0.3f, 0.3f, -1.0f, 1.0},
         {0.1+ 0.3f,  0.3f, -1.0f, 1.0},
         {0.1+ -0.3f, -0.3f, -1.0f, 1.0},
         {0.1+ 0.3f, -0.3f, -1.0f, 1.0},
-        {0.1+ -0.3f, 0.3f, 1.0f, 1.0},
-        {0.1+ 0.3f,  0.3f, 1.0f, 1.0},
-        {0.1+ -0.3f, -0.3f, 1.0f, 1.0},
-        {0.1+ 0.3f, -0.3f, 1.0f, 1.0},
+        {0.1+ -0.3f, 0.3f, -0.7f, 1.0},
+        {0.1+ 0.3f,  0.3f, -0.7f, 1.0},
+        {0.1+ -0.3f, -0.3f, -0.7f, 1.0},
+        {0.1+ 0.3f, -0.3f, -0.7f, 1.0},
     };  
-
 
     //fuck it perspective
 
-    glm::mat4 projection = glm::perspective(45.0f, 1.0f, 0.1f, 60.0f);
-    glm::mat4 view = glm::lookAt(camera, glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+    glm::mat4 projection = glm::perspective(30.0f, 1.0f, 0.1f, 60.0f);
+    glm::mat4 view = glm::lookAt(camera, glm::vec3(0, 0, 0), glm::vec3(0, 0, 1));
 
 
     glm::mat4 model = glm::mat4(1.0f);
@@ -230,7 +256,8 @@ int main()
         }
 
         // remake projection
-        view = glm::lookAt(camera, glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+        // view = glm::lookAt(camera, glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+        view = glm::lookAt(camera, aim, glm::vec3(0, 1, 0));
         glm::mat4 mvp = projection * view * model;
         int mvpLocation = glGetUniformLocation(shaderProgram, "mvp");
         glUniformMatrix4fv(mvpLocation, 1, GL_FALSE, glm::value_ptr(mvp));
