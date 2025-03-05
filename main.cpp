@@ -14,7 +14,9 @@
 # define M_PI 3.14159265358979323846
 
 float fov = glm::radians(45.0f);
-float farDistance=1.2f;
+float farDistance=50.0f;
+// float farDistance=1.2f;
+// float farDistance=0.5f;
 float nearDistance=0.1f;
 
 auto camera = glm::vec3(-0.5, -0.5, 1);
@@ -142,6 +144,8 @@ int main()
     // const std::string path = "data/A1P10C0-2021_11_04_12_30_45.npy";
     const std::string path = "data/A2P10C0-2021_11_04_12_31_28.npy";
     // const std::string path = "data/A10P10C0-2021_11_04_12_34_46.npy";
+    // const std::string path = "data/A54P25C1-2021_11_08_11_34_37.npy";
+    
     std::cout << "READING: " << path << std::endl;
     npy::npy_data d = npy::read_npy<float>(path);
     d.fortran_order = true;
@@ -167,20 +171,59 @@ int main()
 
     std::vector<float> vertices; // Create a vector of glm::vec4
 
-    // declare start
-    // for(int x = 0; x < ds_width; x++)
+    // declare random ass cube
+    const float CUBE_T = 50000.0f;
+    const float CUBE_T_START = 8000000.0f;
+    const float XSTEP = 50.0f;
+    const float YSTEP = 50.0f;
+    const float TSTEP = 50.0f;
+    const float PLANE_STEP = TSTEP * 10000.0f;
+
+    // for(float t = CUBE_T_START; t < CUBE_T_START + CUBE_T; t+= TSTEP)
     // {
-    //     for(int y = 0; y < ds_height; y++)
+    //     float endx = ds_width * 0.45;
+    //     float endy = ds_height * 0.45;
+
+    //     for(float x = 0; x < endx; x+= XSTEP)
     //     {
-    //         vertices.push_back(x);
-    //         vertices.push_back(y);
-    //         vertices.push_back(0);
-    //         if (x == 0)
-    //         vertices.push_back(0);
-    //         else
-    //         vertices.push_back(1);
+    //         for(float y = 0; y < endy; y+= YSTEP)
+    //         {
+    //             vertices.push_back(x);
+    //             vertices.push_back(y);
+    //             vertices.push_back(t);
+    //             vertices.push_back(0.5f);
+    //         }
     //     }
     // }
+    // bounding box
+    for(float t = 0; t < CUBE_T_START; t+= TSTEP)
+    {
+        // for(float x = 0; x < ds_width + 1; x+= ds_width/2)
+        for(float x = 0; x < ds_width + 1; x+= XSTEP)
+        {
+            for(float y = 0; y < ds_height + 1; y+= YSTEP)
+            {
+                vertices.push_back(x);
+                vertices.push_back(y);
+                vertices.push_back(t);
+                vertices.push_back(0.5f);
+            }
+        }
+    }
+    for(float t = 0; t < CUBE_T_START; t+= PLANE_STEP)
+    {
+        // for(float x = 0; x < ds_width + 1; x+= ds_width/2)
+        for(float x = 0; x < ds_width + 1; x+= 1)
+        {
+            for(float y = 0; y < ds_height + 1; y+= 1)
+            {
+                vertices.push_back(x);
+                vertices.push_back(y);
+                vertices.push_back(t);
+                vertices.push_back(0.5f);
+            }
+        }
+    }
 
 
 
@@ -277,10 +320,12 @@ int main()
         "in float vertexColor;\n"
         "void main()\n"
         "{\n"
-            "if(vertexColor > 0.5)\n"
+            "if(vertexColor > 0.6)\n"
             "FragColor = vec4(0.0, 1.0, 0.0, 1.0);\n"
+            "else{if(vertexColor > 0.4)\n"
+            "FragColor = vec4(0.0, 0.0, 1.0, 1.0);\n"
             "else\n"
-            "FragColor = vec4(1.0, 0.0, 0.0, 1.0);\n"
+            "FragColor = vec4(1.0, 0.0, 0.0, 1.0);}\n"
         "}\0";
     
 
@@ -312,7 +357,8 @@ int main()
 
     glEnable(GL_DEPTH_TEST);
 
-    glClearColor(0.2f, 0.2f, 0.2f, 0.5f);
+    // glClearColor(0.2f, 0.2f, 0.2f, 0.5f);
+    glClearColor(1.0f,1.0f,1.0f,1.0f);
     while(!glfwWindowShouldClose(window))
     {
 
@@ -338,6 +384,7 @@ int main()
         // glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
         // glDrawArrays(GL_POINTS, 0, vertices.size());  // Each vertex is 1 float
         glPointSize(1.0f); // Set point size to 10 pixels
+        // glPointSize(3.0f); // Set point size to 10 pixels
         glDrawArrays(GL_POINTS, 0, vertices.size()/4);  // Each vertex is 1 float
 
         glfwSwapBuffers(window);
